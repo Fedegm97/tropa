@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/*
+ * Tokens. Dark mode por defecto: fondo oscuro cálido.
+ * El color del club se inyecta en --accent desde el layout del club.
+ *   --accent       color del club (fondos de botones, barras)
+ *   --accent-fg    texto legible sobre --accent (negro o blanco)
+ *   --accent-text  variante del acento con contraste AA sobre el fondo oscuro
+ */
+:root {
+  --accent: #ff5a1f;
+  --accent-fg: #0b0907;
+  --accent-text: #ff7a47;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: #15110e;
+  --color-surface: #1f1a16;
+  --color-surface-2: #2a231e;
+  --color-border: #3a312a;
+  --color-fg: #f6efe9;
+  --color-muted: #b3a69b;
+  --color-subtle: #8a7d72;
+  --color-success: #3ddc84;
+  --color-warning: #ffc531;
+  --color-danger: #ff5c5c;
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-text: var(--accent-text);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-card: 1.125rem;
+  --radius-xl2: 1.25rem;
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.85);
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
