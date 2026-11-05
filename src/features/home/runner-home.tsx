@@ -13,6 +13,13 @@ import type { ClubContext } from "@/lib/club";
 import { getProfile } from "@/lib/club";
 import { createClient } from "@/lib/supabase/server";
 import { InstallNudge } from "./install-nudge";
+import { StatusTile, icons } from "./status-cards";
+import { EventCard } from "@/features/events/event-card";
+import { loadEvents } from "@/features/events/data";
+import { feeStatuses } from "@/features/fees/data";
+import { clubHas } from "@/lib/club";
+import { periodOf, FEE_STATUS_LABEL } from "@/lib/domain/fees";
+import { MEDICAL_STATUS_LABEL, medicalStatus } from "@/lib/domain/medical";
 import { WeekBars } from "./week-bars";
 
 export async function RunnerHome({ ctx }: { ctx: ClubContext }) {
@@ -38,6 +45,19 @@ export async function RunnerHome({ ctx }: { ctx: ClubContext }) {
       .order("published_at", { ascending: false })
       .limit(3),
   ]);
+
+  const hasFees = clubHas(club, "fees");
+  const hasMedical = clubHas(club, "medical");
+  const [fees, { data: cert }, events] = await Promise.all([
+    hasFees ? feeStatuses(club.id, periodOf(today)) : Promise.resolve([]),
+    hasMedical
+      ? supabase.from("medical_certificates").select("expires_on").eq("club_id", club.id).eq("user_id", userId).order("uploaded_at", { ascending: false }).limit(1).maybeSingle()
+      : Promise.resolve({ data: null }),
+    loadEvents(club.id, { upcoming: true, limit: 1 }),
+  ]);
+  const myFee = fees.find((f) => f.user_id === userId);
+  const med = medicalStatus(cert?.expires_on, today);
+  const nextEvent = events[0];
 
   const ids = (sessions ?? []).map((s) => s.id);
   const { data: completions } = ids.length
@@ -97,10 +117,40 @@ export async function RunnerHome({ ctx }: { ctx: ClubContext }) {
         <EmptyState icon={CalendarCheck} title="Hoy no hay plan" description="Aprovechá para descansar o mirá lo que viene en la semana." action={<Button asChild variant="secondary"><Link href="/plan">Ver la semana</Link></Button>} />
       )}
 
+      {(myFee || hasMedical) && (
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {myFee && (
+            <StatusTile
+              href="/cuota"
+              icon={icons.Wallet}
+              label="Cuota"
+              value={FEE_STATUS_LABEL[myFee.status]}
+              tone={myFee.status === "paid" ? "success" : myFee.status === "pending" ? "warning" : "danger"}
+            />
+          )}
+          {hasMedical && (
+            <StatusTile
+              href="/apto"
+              icon={icons.HeartPulse}
+              label="Apto médico"
+              value={MEDICAL_STATUS_LABEL[med]}
+              tone={med === "valid" ? "success" : med === "expiring" ? "warning" : med === "expired" ? "danger" : "neutral"}
+            />
+          )}
+        </div>
+      )}
+
       <SectionTitle>Tu semana</SectionTitle>
       <Card>
         <WeekBars days={(week ?? []).map((d) => ({ day: d.day, planned: d.planned, completed: d.completed }))} today={today} />
       </Card>
+
+      {nextEvent && (
+        <>
+          <SectionTitle>Próximo evento</SectionTitle>
+          <EventCard event={nextEvent} tz={club.timezone} today={today} userId={userId} />
+        </>
+      )}
 
       <SectionTitle>Últimos avisos</SectionTitle>
       {announcements && announcements.length > 0 ? (

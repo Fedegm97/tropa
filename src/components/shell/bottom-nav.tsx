@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Home, Megaphone, Settings, User, Users } from "lucide-react";
+import { CalendarDays, CalendarHeart, Home, Megaphone, Settings, User, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const RUNNER = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/plan", label: "Plan", icon: CalendarDays },
+  { href: "/eventos", label: "Eventos", icon: CalendarHeart },
   { href: "/avisos", label: "Avisos", icon: Megaphone },
   { href: "/perfil", label: "Perfil", icon: User },
 ];

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Clock, Lock, Sparkles } from "lucide-react";
+import { CalendarHeart, ChevronRight, Clock, HeartPulse, Lock, Sparkles, Wallet } from "lucide-react";
 import { Avatar } from "@/components/brand/club-badge";
 import { Badge, Card, SectionTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/page-header";
@@ -7,7 +7,8 @@ import { BrandingForm } from "@/features/clubs/branding-form";
 import { CoachInviteForm } from "@/features/clubs/coach-invite-form";
 import { InviteBlock } from "@/features/onboarding/invite-block";
 import { PLANS, checkLimit, effectivePlan, type Feature, type PlanCode } from "@/lib/domain/plans";
-import { currentOrigin, requireStaff } from "@/lib/club";
+import { clubSettings, currentOrigin, requireStaff } from "@/lib/club";
+import { BirthdayToggle } from "@/features/fees/config-forms";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Club" };
@@ -47,13 +48,28 @@ export default async function SettingsPage({ params }: PageProps<"/c/[club]/ajus
       <InviteBlock clubName={club.name} origin={origin} initialCode={club.invite_code} canRegenerate />
 
       <SectionTitle>Organización</SectionTitle>
-      <Link href="/turnos" className="block">
-        <Card className="flex items-center gap-3 hover:bg-surface-2">
-          <Clock className="size-5 text-accent-text" aria-hidden />
-          <span className="flex-1 font-medium">Turnos</span>
-          <ChevronRight className="size-5 text-subtle" aria-hidden />
-        </Card>
-      </Link>
+      <div className="space-y-2">
+        {[
+          { href: "/turnos", label: "Turnos", icon: Clock, on: true },
+          { href: "/eventos", label: "Eventos", icon: CalendarHeart, on: true },
+          { href: "/cuotas", label: "Cuotas", icon: Wallet, on: plan.features.includes("fees") },
+          { href: "/aptos", label: "Aptos médicos", icon: HeartPulse, on: plan.features.includes("medical") },
+        ].map(({ href, label, icon: Icon, on }) => (
+          <Link key={href} href={href} className="block">
+            <Card className="flex items-center gap-3 hover:bg-surface-2">
+              <Icon className="size-5 text-accent-text" aria-hidden />
+              <span className="flex-1 font-medium">{label}</span>
+              {!on && <Lock className="size-4 text-subtle" aria-label="No incluido en tu plan" />}
+              <ChevronRight className="size-5 text-subtle" aria-hidden />
+            </Card>
+          </Link>
+        ))}
+        {plan.features.includes("birthdays") && (
+          <Card>
+            <BirthdayToggle enabled={!!clubSettings(club).birthday_greeting} canEdit={isOwner} />
+          </Card>
+        )}
+      </div>
 
       <SectionTitle>Plan</SectionTitle>
       <Card className="space-y-3">

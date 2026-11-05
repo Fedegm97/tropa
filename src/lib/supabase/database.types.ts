@@ -153,6 +153,160 @@ isOneToOne: false
       referencedColumns: ["code"]
     }
                   ]
+                },"event_registrations": {
+                  Row: {
+                    "club_id": string,"created_at": string,"distance": string | null,"event_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "club_id": string,"created_at"?: string,"distance"?: string | null,"event_id": string,"user_id": string
+                  }
+                  Update: {
+                    "club_id"?: string,"created_at"?: string,"distance"?: string | null,"event_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_registrations_club_id_event_id_fkey"
+      columns: ["club_id","event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["club_id","id"]
+    },{
+      foreignKeyName: "event_registrations_club_id_user_id_fkey"
+      columns: ["club_id","user_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["club_id","user_id"]
+    },{
+      foreignKeyName: "event_registrations_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"events": {
+                  Row: {
+                    "club_id": string,"created_at": string,"created_by": string | null,"distances": (string)[],"id": string,"kind": Database["public"]['Enums']["event_kind"],"location": string | null,"name": string,"notes": string | null,"price_cents": number | null,"registration_url": string | null,"starts_at": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "club_id": string,"created_at"?: string,"created_by"?: string | null,"distances"?: (string)[],"id"?: string,"kind"?: Database["public"]['Enums']["event_kind"],"location"?: string | null,"name": string,"notes"?: string | null,"price_cents"?: number | null,"registration_url"?: string | null,"starts_at": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "club_id"?: string,"created_at"?: string,"created_by"?: string | null,"distances"?: (string)[],"id"?: string,"kind"?: Database["public"]['Enums']["event_kind"],"location"?: string | null,"name"?: string,"notes"?: string | null,"price_cents"?: number | null,"registration_url"?: string | null,"starts_at"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "events_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "events_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fee_payments": {
+                  Row: {
+                    "amount_cents": number,"club_id": string,"created_at": string,"id": string,"method": Database["public"]['Enums']["payment_method"],"note": string | null,"period": string,"receipt_path": string | null,"reject_reason": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"status": Database["public"]['Enums']["payment_status"],"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_cents": number,"club_id": string,"created_at"?: string,"id"?: string,"method": Database["public"]['Enums']["payment_method"],"note"?: string | null,"period": string,"receipt_path"?: string | null,"reject_reason"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"user_id": string
+                  }
+                  Update: {
+                    "amount_cents"?: number,"club_id"?: string,"created_at"?: string,"id"?: string,"method"?: Database["public"]['Enums']["payment_method"],"note"?: string | null,"period"?: string,"receipt_path"?: string | null,"reject_reason"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fee_payments_club_id_user_id_fkey"
+      columns: ["club_id","user_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["club_id","user_id"]
+    },{
+      foreignKeyName: "fee_payments_reviewed_by_fkey"
+      columns: ["reviewed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fee_payments_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fee_rules": {
+                  Row: {
+                    "amount_cents": number,"club_id": string,"created_at": string,"created_by": string | null,"id": string,"shift_id": string | null,"user_id": string | null,"valid_from": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_cents": number,"club_id": string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"shift_id"?: string | null,"user_id"?: string | null,"valid_from": string
+                  }
+                  Update: {
+                    "amount_cents"?: number,"club_id"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"shift_id"?: string | null,"user_id"?: string | null,"valid_from"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fee_rules_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fee_rules_club_id_shift_id_fkey"
+      columns: ["club_id","shift_id"]
+isOneToOne: false
+      referencedRelation: "shifts"
+      referencedColumns: ["club_id","id"]
+    },{
+      foreignKeyName: "fee_rules_club_id_user_id_fkey"
+      columns: ["club_id","user_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["club_id","user_id"]
+    },{
+      foreignKeyName: "fee_rules_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"medical_certificates": {
+                  Row: {
+                    "club_id": string,"expires_on": string,"file_path": string,"id": string,"uploaded_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "club_id": string,"expires_on": string,"file_path": string,"id"?: string,"uploaded_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "club_id"?: string,"expires_on"?: string,"file_path"?: string,"id"?: string,"uploaded_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "medical_certificates_club_id_user_id_fkey"
+      columns: ["club_id","user_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["club_id","user_id"]
+    },{
+      foreignKeyName: "medical_certificates_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"memberships": {
                   Row: {
                     "club_id": string,"id": string,"joined_at": string,"level": Database["public"]['Enums']["runner_level"] | null,"ref_pace_kind": Database["public"]['Enums']["pace_kind"],"ref_pace_s_per_km": number | null,"role": Database["public"]['Enums']["member_role"],"shift_id": string | null,"status": Database["public"]['Enums']["member_status"],"updated_at": string,"user_id": string
@@ -530,11 +684,21 @@ isOneToOne: false
 "club_effective_plan":
 { Args: { "p_club": string }; Returns: string
                            },
+"club_fee_statuses":
+{ Args: { "p_club": string,"p_period": string }; Returns: {
+              "amount_due": number,"avatar_path": string,"confirmed_cents": number,"full_name": string,"pending_count": number,"shift_id": string,"status": string,"user_id": string
+            }[]
+                           },
 "club_has_feature":
 { Args: { "p_club": string,"p_feature": string }; Returns: boolean
                            },
 "club_id_from_path":
 { Args: { "p_name": string }; Returns: string
+                           },
+"club_medical_statuses":
+{ Args: { "p_club": string }; Returns: {
+              "avatar_path": string,"expires_on": string,"file_path": string,"full_name": string,"status": string,"user_id": string
+            }[]
                            },
 "club_public_by_invite":
 { Args: { "p_code": string }; Returns: {
@@ -545,6 +709,9 @@ isOneToOne: false
 { Args: { "p_slug": string }; Returns: {
               "id": string,"logo_path": string,"name": string,"primary_color": string,"slug": string
             }[]
+                           },
+"club_today":
+{ Args: { "p_club": string,"p_now"?: string }; Returns: string
                            },
 "complete_push":
 { Args: { "p_ids": (string)[],"p_status": Database["public"]['Enums']["push_status"] }; Returns: undefined
@@ -580,6 +747,12 @@ isOneToOne: false
 "duplicate_week":
 { Args: { "p_club": string,"p_from_monday": string,"p_to_monday": string }; Returns: number
                            },
+"fee_amount_due":
+{ Args: { "p_club": string,"p_period": string,"p_user": string }; Returns: number
+                           },
+"fee_status_of":
+{ Args: { "p_confirmed": number,"p_due": number,"p_pending": number }; Returns: string
+                           },
 "gen_code":
 { Args: { "p_len"?: number }; Returns: string
                            },
@@ -613,6 +786,12 @@ isOneToOne: false
 "join_club":
 { Args: { "p_code": string }; Returns: string
                            },
+"log_reminder":
+{ Args: { "p_club": string,"p_kind": string,"p_ref": string,"p_user": string }; Returns: boolean
+                           },
+"medical_status_of":
+{ Args: { "p_expires": string,"p_today": string }; Returns: string
+                           },
 "my_club_ids":
 { Args: Record<PropertyKey, never>; Returns: string[]
                            },
@@ -636,6 +815,12 @@ isOneToOne: false
 "regenerate_invite_code":
 { Args: { "p_club": string }; Returns: string
                            },
+"review_fee_payment":
+{ Args: { "p_approve": boolean,"p_payment": string,"p_reason"?: string }; Returns: undefined
+                           },
+"run_daily_reminders":
+{ Args: { "p_ignore_hour"?: boolean,"p_now"?: string }; Returns: Json
+                           },
 "shares_club":
 { Args: { "p_user": string }; Returns: boolean
                            },
@@ -649,7 +834,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "audience_kind": "club"|"shift"|"runners","member_role": "owner"|"coach"|"runner","member_status": "active"|"inactive","pace_kind": "5k"|"threshold","plan_status": "trialing"|"active"|"past_due"|"canceled","push_status": "pending"|"processing"|"sent"|"failed"|"skipped","runner_level": "beginner"|"intermediate"|"advanced","session_type": "easy_run"|"intervals"|"long_run"|"fartlek"|"hills"|"strength"|"rest"
+            "audience_kind": "club"|"shift"|"runners","event_kind": "road"|"trail"|"track"|"social"|"trip","member_role": "owner"|"coach"|"runner","member_status": "active"|"inactive","pace_kind": "5k"|"threshold","payment_method": "transfer"|"cash"|"mercadopago"|"other","payment_status": "pending"|"confirmed"|"rejected","plan_status": "trialing"|"active"|"past_due"|"canceled","push_status": "pending"|"processing"|"sent"|"failed"|"skipped","runner_level": "beginner"|"intermediate"|"advanced","session_type": "easy_run"|"intervals"|"long_run"|"fartlek"|"hills"|"strength"|"rest"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -769,7 +954,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "audience_kind": ["club", "shift", "runners"],"member_role": ["owner", "coach", "runner"],"member_status": ["active", "inactive"],"pace_kind": ["5k", "threshold"],"plan_status": ["trialing", "active", "past_due", "canceled"],"push_status": ["pending", "processing", "sent", "failed", "skipped"],"runner_level": ["beginner", "intermediate", "advanced"],"session_type": ["easy_run", "intervals", "long_run", "fartlek", "hills", "strength", "rest"]
+            "audience_kind": ["club", "shift", "runners"],"event_kind": ["road", "trail", "track", "social", "trip"],"member_role": ["owner", "coach", "runner"],"member_status": ["active", "inactive"],"pace_kind": ["5k", "threshold"],"payment_method": ["transfer", "cash", "mercadopago", "other"],"payment_status": ["pending", "confirmed", "rejected"],"plan_status": ["trialing", "active", "past_due", "canceled"],"push_status": ["pending", "processing", "sent", "failed", "skipped"],"runner_level": ["beginner", "intermediate", "advanced"],"session_type": ["easy_run", "intervals", "long_run", "fartlek", "hills", "strength", "rest"]
           }
         }
 } as const

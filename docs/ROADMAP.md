@@ -16,21 +16,22 @@
 - Superadmin: clubes, uso, cambio manual de plan (pilotos)
 - Límites por plan al sumar corredores / coaches (sin bloquear datos existentes)
 
-## Fase 2
+## Fase 2 · Cuotas, aptos, eventos y recordatorios ✅
 
-- Cuotas (reglas por club / turno / corredor, declaración con comprobante, confirmación del coach, resumen, CSV, recordatorio pg_cron)
-  - La lógica de estados y montos ya está implementada y testeada en `src/lib/domain/fees.ts`
-- Apto médico (estados, recordatorios, vista del coach) — lógica en `src/lib/domain/medical.ts`
-- Eventos (inscripción con distancia, avatares, cuenta regresiva, recordatorio del día anterior)
-- Cumpleaños: aviso al coach por push + saludo automático opcional
-- Jobs de pg_cron para cuotas, aptos, eventos y cumpleaños (con `reminder_log`)
-- Seed: cuotas con estados mezclados y eventos
+- Cuotas: montos por club / turno / corredor (becas con 0) con vigencia por mes, el corredor informa el pago con comprobante (imagen comprimida en el cliente o PDF, máx. 1 MB), el coach confirma o rechaza con un toque (con motivo), estados Al día / Pendiente de confirmar / Debe, resumen "N de M al día", filtros, exportación CSV para Excel y recordatorio automático el día configurado
+- Apto médico: carga de certificado (foto o PDF) con vencimiento, estados Vigente / Por vencer (30 días) / Vencido / Sin cargar, vista del coach con filtros, recordatorios 30 y 7 días antes, el día y el día después del vencimiento
+- Eventos: calle / trail / pista / salida especial / viaje, distancias, link de inscripción, precio, anotarse o bajarse con distancia, avatares "+N", cuenta regresiva, push al publicar y recordatorio el día anterior
+- Cumpleaños: aviso al staff y saludo automático opcional del club
+- Recordatorios con pg_cron (cada hora; cada club a las 9:00 de su zona horaria), idempotentes con `reminder_log`
+- Funciones según el plan: cuotas, apto y cumpleaños desde el plan Coach, con mensaje + upsell; los datos ya cargados siempre se siguen viendo
+- Seed: cuotas con estados mezclados (incluye pago parcial, rechazado y becado), aptos en todos los estados y 4 eventos con inscriptos
 
 ## Fase 3
 
 - Tienda (productos, talles, stock, pedidos con numeración por club)
 - Suscripciones con Mercado Pago (capa `BillingProvider` para sumar Stripe), prueba de 30 días sin tarjeta
-- Feature flags por plan en la UI (la lógica ya existe en `src/lib/domain/plans.ts` y `club_has_feature()`)
+- Activación automática de funciones al suscribirse (hoy el gating por plan ya funciona; el cambio de plan es manual desde /admin)
+- Tienda bajo la feature `store` (plan Team)
 - Garmin Connect Training API ("Enviando… → En el reloj")
 
 ## Pendientes transversales

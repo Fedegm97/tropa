@@ -53,6 +53,33 @@ Crean dos clubes completos y verifican, como cada rol, que:
 - INSERT / UPDATE / DELETE cruzados fallan o no afectan filas, incluidas las FK compuestas y Storage;
 - dentro del club, cada rol ve solo lo que le corresponde.
 
+## Fase 2: cuotas, apto, eventos y recordatorios
+
+| Tabla | Notas |
+|-------|-------|
+| `fee_rules` | Monto mensual general, por turno o por corredor (0 = becado), con `valid_from` (día 1). Gana la más específica y, a igual prioridad, la más reciente. El corredor no ve las becas de otros |
+| `fee_payments` | Pago informado por el corredor (monto, medio, comprobante). Solo el staff lo confirma o rechaza, vía RPC `review_fee_payment` (un trigger impide tocar el estado desde el cliente). Editable/borrable solo mientras está pendiente |
+| `medical_certificates` | Historial de aptos; vale el último cargado |
+| `events` / `event_registrations` | Eventos del club e inscripciones con distancia (validada contra las del evento) |
+
+Los estados se calculan, no se guardan:
+
+- `club_fee_statuses(club, period)` → Al día / Pendiente de confirmar / Debe por corredor (el staff ve a todos; un corredor, solo a sí mismo). Usa `fee_amount_due()` y `fee_status_of()`, que son el espejo exacto de `resolveFeeAmount()` y `feeStatus()` en TypeScript; un test verifica la paridad caso por caso.
+- `club_medical_statuses(club)` → Vigente / Por vencer / Vencido / Sin cargar, con `medical_status_of()` (espejo de `medicalStatus()`).
+
+Las funciones por plan se aplican también en la base: `fee_payments`, `fee_rules` y `medical_certificates` exigen `club_has_feature()` para **insertar**, nunca para leer.
+
+### Recordatorios
+
+`run_daily_reminders()` corre cada hora (pg_cron) y procesa los clubes donde son las 9:00 en su zona horaria:
+
+1. **Cuotas:** el día `settings.fee_reminder_day` (10 por defecto), a quienes deben el mes.
+2. **Apto:** 30 y 7 días antes, el día del vencimiento y el día después.
+3. **Eventos:** a los inscriptos, el día anterior.
+4. **Cumpleaños:** aviso al staff y, si `settings.birthday_greeting`, saludo del club al corredor.
+
+Cada aviso se registra en `reminder_log` (clave única), así correrlo dos veces no duplica nada. Las notificaciones las envía el worker de push en el siguiente minuto.
+
 ## Ritmos (`src/lib/domain/pace.ts`)
 
 - El ancla es el **ritmo de umbral**. Si el corredor cargó su 5K, se estima con Riegel (`T2 = T1 · (D2/D1)^1.06`) como el ritmo sostenible 60 minutos.

@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Select, Textarea } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/images/compress";
-import { cn } from "@/lib/utils";
+import { cn, randomId } from "@/lib/utils";
 import { createAnnouncement } from "./actions";
 
 export function AnnouncementComposer({ clubId, userId, shifts }: { clubId: string; userId: string; shifts: { id: string; name: string }[] }) {
@@ -35,7 +35,7 @@ export function AnnouncementComposer({ clubId, userId, shifts }: { clubId: strin
     start(async () => {
       let imagePath: string | null = null;
       if (image) {
-        imagePath = `${clubId}/announcements/${userId}/${crypto.randomUUID()}.webp`;
+        imagePath = `${clubId}/announcements/${userId}/${randomId()}.webp`;
         const { error } = await createClient().storage.from("club-files").upload(imagePath, image, { contentType: "image/webp" });
         if (error) return void toast.error("No pudimos subir la imagen.");
       }

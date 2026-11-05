@@ -2,11 +2,11 @@
 
 Plataforma SaaS de marca blanca para running teams. Cada club tiene su propia app (nombre, color, logo y subdominio) que sus corredores instalan como PWA desde el navegador, sin pasar por las stores.
 
-- **Corredor:** ve su plan del día con ritmos calculados para él, marca sesiones como hechas, recibe avisos con push.
-- **Coach:** arma planes por bloques, segmenta por turno o corredor, ve quién completó, publica avisos.
+- **Corredor:** ve su plan del día con ritmos calculados para él, marca sesiones como hechas, informa el pago de la cuota, sube el apto médico, se anota en eventos y recibe avisos con push.
+- **Coach:** arma planes por bloques, segmenta por turno o corredor, ve quién completó, publica avisos, confirma cuotas, controla aptos y organiza eventos.
 - **Owner:** configura la marca, invita coaches y corredores, administra turnos y el plan.
 
-> Estado: **Fase 1 (MVP para pilotos)**. Ver [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> Estado: **Fase 2 completa** (planes, avisos, turnos, cuotas, apto médico, eventos y recordatorios). Ver [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Stack
 
@@ -70,14 +70,16 @@ En la pantalla de ingreso tocá **"Tengo contraseña"**.
 
 Link de invitación del club de ejemplo: http://rionorte.lvh.me:3000/unirme/RIONORTE
 
+En el seed, `corredor13`–`15` tienen pagos para confirmar, `corredor16` uno rechazado, `corredor17`, `18` y `20` deben, `corredor19` pagó parcial y `corredor9` está becado. Los aptos: 1–10 vigentes, 11–13 por vencer, 14–15 vencidos y 16–20 sin cargar.
+
 ## Scripts
 
 | Script | Qué hace |
 |--------|----------|
 | `pnpm dev` / `build` / `start` | Next.js |
 | `pnpm lint` · `pnpm typecheck` | ESLint · TypeScript |
-| `pnpm test` | Tests unitarios (ritmos, cuotas, apto, planes, hosts, colores) |
-| `pnpm test:rls` | Tests de aislamiento entre clubes contra la base local (requiere `db:start`) |
+| `pnpm test` | Tests unitarios (ritmos, cuotas, apto, planes, montos, CSV, eventos, zonas horarias, hosts, colores) |
+| `pnpm test:rls` | Aislamiento entre clubes, permisos, paridad SQL↔TS y recordatorios, contra la base local (requiere `db:start`) |
 | `pnpm db:start` / `db:reset` | Supabase local / reaplicar migraciones + seed |
 | `pnpm db:types` | Regenera `src/lib/supabase/database.types.ts` |
 | `pnpm vapid:generate` | Claves VAPID para Web Push |

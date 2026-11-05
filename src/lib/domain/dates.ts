@@ -47,3 +47,33 @@ export function shortDate(date: string): string {
 export function formatDays(days: number[]): string {
   return [...days].sort().map((d) => DAY_NAMES[d - 1].slice(0, 3)).join(" · ");
 }
+
+/** Fecha y hora locales de una zona horaria → instante UTC (ISO). */
+export function zonedToUtc(date: string, time: string, timeZone: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  const [hh, mm] = time.split(":").map(Number);
+  const guess = Date.UTC(y, m - 1, d, hh, mm);
+  const offset = (instant: number) => {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).formatToParts(new Date(instant));
+    const get = (t: string) => Number(parts.find((p) => p.type === t)!.value);
+    return Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute")) - instant;
+  };
+  const first = guess - offset(guess);
+  return new Date(guess - offset(first)).toISOString();
+}
+
+/** Instante UTC → { date, time } en la zona del club. */
+export function utcToZoned(iso: string, timeZone: string): { date: string; time: string } {
+  const d = new Date(iso);
+  const date = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+  const time = new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d);
+  return { date, time };
+}

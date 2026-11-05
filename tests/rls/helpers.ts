@@ -99,6 +99,8 @@ export type ClubFixture = {
   sessionDraft: string;
   announcementId: string;
   announcementShift: string;
+  paymentId: string;
+  eventId: string;
 };
 
 /** Crea un club completo con datos en todas las tablas (como superusuario). */
@@ -189,6 +191,27 @@ export async function createClubFixture(db: Db, label: string): Promise<ClubFixt
     clubId,
     runner1.id,
   ]);
+  // Fase 2
+  await db.query(`insert into public.fee_rules (club_id, amount_cents, valid_from) values ($1, 2000000, date_trunc('month', current_date))`, [clubId]);
+  await db.query(`insert into public.fee_rules (club_id, user_id, amount_cents, valid_from) values ($1, $2, 0, date_trunc('month', current_date))`, [
+    clubId,
+    runner2.id,
+  ]);
+  const payment = await one(
+    `insert into public.fee_payments (club_id, user_id, period, amount_cents, method) values ($1, $2, date_trunc('month', current_date), 2000000, 'transfer') returning id`,
+    [clubId, runner1.id],
+  );
+  await db.query(`insert into public.medical_certificates (club_id, user_id, file_path, expires_on) values ($1, $2, $3, current_date + 100)`, [
+    clubId,
+    runner1.id,
+    `${clubId}/medical/${runner1.id}/apto.pdf`,
+  ]);
+  const event = await one(
+    `insert into public.events (club_id, name, starts_at, distances, created_by) values ($1, 'Carrera', now() + interval '10 days', '{10K}', $2) returning id`,
+    [clubId, coach.id],
+  );
+  await db.query(`insert into public.event_registrations (club_id, event_id, user_id, distance) values ($1, $2, $3, '10K')`, [clubId, event.id, runner1.id]);
+
   await db.query(
     `insert into storage.objects (bucket_id, name, owner_id) values
        ('club-files', $1, $3), ('club-files', $2, $4), ('branding', $5, $3)`,
@@ -215,6 +238,8 @@ export async function createClubFixture(db: Db, label: string): Promise<ClubFixt
     sessionDraft: sDraft.id,
     announcementId: ann.id,
     announcementShift: annShift.id,
+    paymentId: payment.id,
+    eventId: event.id,
   };
 }
 

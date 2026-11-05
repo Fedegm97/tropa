@@ -6,7 +6,7 @@
 --   · Contraseña de todos los usuarios: tropa1234
 --
 -- Se ejecuta solo con `supabase db reset`. NO usar en producción.
--- (Cuotas, eventos y productos se suman al seed en las fases 2 y 3, junto con sus tablas.)
+-- (Los productos de la tienda se suman en la fase 3, junto con sus tablas.)
 -- =============================================================================
 
 do $seed$
@@ -201,3 +201,99 @@ begin
   update public.notifications set push_status = 'skipped', read_at = case when created_at < now() - interval '1 day' then now() end;
 end;
 $seed$;
+
+-- =============================================================================
+-- Fase 2: cuotas (estados mezclados), aptos médicos y eventos
+-- =============================================================================
+do $seed2$
+declare
+  v_club uuid := '11111111-1111-1111-1111-111111111111';
+  v_owner uuid := '00000000-0000-0000-0000-0000000000a1';
+  v_night uuid := '22222222-2222-2222-2222-222222222202';
+  v_period date := date_trunc('month', current_date)::date;
+  v_prev date := (date_trunc('month', current_date) - interval '1 month')::date;
+  v_uid uuid;
+  v_event uuid;
+  i int;
+begin
+  update public.clubs set settings = '{"fee_reminder_day": 10, "birthday_greeting": true}' where id = v_club;
+
+  -- Reglas: $25.000 general, $22.000 turno Noche, corredor 9 becado
+  insert into public.fee_rules (club_id, shift_id, user_id, amount_cents, valid_from, created_by) values
+    (v_club, null, null, 2200000, (v_period - interval '6 months')::date, v_owner),
+    (v_club, null, null, 2500000, v_prev, v_owner),
+    (v_club, v_night, null, 2200000, v_prev, v_owner),
+    (v_club, null, '00000000-0000-0000-0000-000000000b09', 0, v_prev, v_owner);
+
+  for i in 1..20 loop
+    v_uid := ('00000000-0000-0000-0000-000000000b' || lpad(i::text, 2, '0'))::uuid;
+    -- Mes anterior: todos al día menos el 17
+    if i not in (9, 17) then
+      insert into public.fee_payments (club_id, user_id, period, amount_cents, method, status, reviewed_by, reviewed_at, created_at)
+      values (v_club, v_uid, v_prev, public.fee_amount_due(v_club, v_uid, v_prev),
+              (array['transfer','cash','mercadopago'])[1 + i % 3]::public.payment_method, 'confirmed', v_owner,
+              v_prev + interval '8 days', v_prev + interval '7 days');
+    end if;
+    -- Mes actual: 1–12 confirmados, 13–15 pendientes, 16 rechazado, 19 pago parcial, 17/18/20 deben
+    if i <= 12 and i <> 9 then
+      insert into public.fee_payments (club_id, user_id, period, amount_cents, method, status, reviewed_by, reviewed_at, created_at)
+      values (v_club, v_uid, v_period, public.fee_amount_due(v_club, v_uid, v_period),
+              (array['transfer','cash','mercadopago'])[1 + i % 3]::public.payment_method, 'confirmed', v_owner, now() - interval '1 day', now() - interval '2 days');
+    elsif i between 13 and 15 then
+      insert into public.fee_payments (club_id, user_id, period, amount_cents, method, status, note, created_at)
+      values (v_club, v_uid, v_period, public.fee_amount_due(v_club, v_uid, v_period), 'transfer', 'pending',
+              case when i = 13 then 'Transferí desde la cuenta de mi pareja' end, now() - interval '5 hours');
+    elsif i = 16 then
+      insert into public.fee_payments (club_id, user_id, period, amount_cents, method, status, reviewed_by, reviewed_at, reject_reason)
+      values (v_club, v_uid, v_period, 1500000, 'transfer', 'rejected', v_owner, now() - interval '1 day', 'El comprobante no corresponde a este mes');
+    elsif i = 19 then
+      insert into public.fee_payments (club_id, user_id, period, amount_cents, method, status, reviewed_by, reviewed_at)
+      values (v_club, v_uid, v_period, 1000000, 'cash', 'confirmed', v_owner, now() - interval '1 day');
+    end if;
+
+    -- Aptos: 1–10 vigentes, 11–13 por vencer, 14–15 vencidos, 16–20 sin cargar
+    if i <= 15 then
+      insert into public.medical_certificates (club_id, user_id, file_path, expires_on, uploaded_at)
+      values (v_club, v_uid, v_club || '/medical/' || v_uid || '/seed.pdf',
+              current_date + case when i <= 10 then 120 + i * 15 when i = 11 then 5 when i = 12 then 12 when i = 13 then 25
+                                  when i = 14 then -10 else -40 end,
+              now() - interval '30 days');
+    end if;
+  end loop;
+
+  -- Eventos
+  insert into public.events (club_id, name, kind, starts_at, location, distances, registration_url, price_cents, notes, created_by)
+  values (v_club, '10K Río Norte', 'road', (current_date + 10 + time '08:00') at time zone 'America/Argentina/Buenos_Aires',
+          'Bosques de Palermo', '{5K,10K}', 'https://example.com/inscripcion-10k', 1800000,
+          'Nos encontramos 7:15 en la carpa del club para la foto grupal.', v_owner)
+  returning id into v_event;
+  insert into public.event_registrations (club_id, event_id, user_id, distance)
+  select v_club, v_event, m.user_id, case when abs(hashtext(m.user_id::text)) % 3 = 0 then '5K' else '10K' end
+  from public.memberships m where m.club_id = v_club and m.role = 'runner' and abs(hashtext(m.user_id::text || 'e1')) % 3 <> 0;
+
+  insert into public.events (club_id, name, kind, starts_at, location, distances, registration_url, price_cents, notes, created_by)
+  values (v_club, 'Viaje: Trail de Tandil', 'trip', (current_date + 24 + time '07:30') at time zone 'America/Argentina/Buenos_Aires',
+          'Tandil, Buenos Aires', '{12K,25K}', 'https://example.com/trail-tandil', 4500000,
+          'Salimos el viernes a la tarde en combi. Cupos limitados.', v_owner)
+  returning id into v_event;
+  insert into public.event_registrations (club_id, event_id, user_id, distance)
+  select v_club, v_event, m.user_id, case when abs(hashtext(m.user_id::text)) % 2 = 0 then '12K' else '25K' end
+  from public.memberships m where m.club_id = v_club and m.role = 'runner' and abs(hashtext(m.user_id::text || 'e2')) % 3 = 0;
+
+  insert into public.events (club_id, name, kind, starts_at, location, notes, created_by)
+  values (v_club, 'Salida especial: Costanera al amanecer', 'social', (current_date + 1 + time '06:30') at time zone 'America/Argentina/Buenos_Aires',
+          'Costanera Norte · Club de Pescadores', 'Rodaje suave de 8 km y desayuno en el club.', '00000000-0000-0000-0000-0000000000a2')
+  returning id into v_event;
+  insert into public.event_registrations (club_id, event_id, user_id)
+  select v_club, v_event, m.user_id from public.memberships m where m.club_id = v_club and m.role = 'runner' and abs(hashtext(m.user_id::text || 'e3')) % 2 = 0;
+
+  insert into public.events (club_id, name, kind, starts_at, location, distances, created_by)
+  values (v_club, 'Media Maratón de Buenos Aires', 'road', (current_date - 40 + time '07:00') at time zone 'America/Argentina/Buenos_Aires',
+          'Av. de Mayo y 9 de Julio', '{21K}', v_owner)
+  returning id into v_event;
+  insert into public.event_registrations (club_id, event_id, user_id, distance)
+  select v_club, v_event, m.user_id, '21K' from public.memberships m where m.club_id = v_club and m.role = 'runner' and abs(hashtext(m.user_id::text)) % 2 = 1;
+
+  update public.notifications set push_status = 'skipped', read_at = now() where push_status = 'pending';
+end;
+$seed2$;

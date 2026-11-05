@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { ROOT_DOMAIN } from "@/lib/env";
 import { clubSlugFromHost } from "@/lib/hosts";
+import { PLANS, effectivePlan, type Feature, type PlanCode } from "@/lib/domain/plans";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type ClubRow = Database["public"]["Tables"]["clubs"]["Row"];
@@ -108,4 +109,23 @@ export async function currentOrigin(): Promise<string> {
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? ROOT_DOMAIN;
   const proto = h.get("x-forwarded-proto") ?? (host.includes("lvh.me") || host.includes("localhost") ? "http" : "https");
   return `${proto}://${host}`;
+}
+
+
+export function clubPlan(club: ClubRow): PlanCode {
+  return effectivePlan({
+    planCode: club.plan_code as PlanCode,
+    planStatus: club.plan_status,
+    trialEndsAt: club.trial_ends_at,
+    planOverride: club.plan_override,
+  });
+}
+
+export function clubHas(club: ClubRow, feature: Feature): boolean {
+  return PLANS[clubPlan(club)].features.includes(feature);
+}
+
+export type ClubSettings = { fee_reminder_day?: number; birthday_greeting?: boolean };
+export function clubSettings(club: ClubRow): ClubSettings {
+  return (club.settings ?? {}) as ClubSettings;
 }

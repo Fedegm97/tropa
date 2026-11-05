@@ -11,6 +11,12 @@ import { PLANS, effectivePlan, type PlanCode } from "@/lib/domain/plans";
 import type { ClubContext } from "@/lib/club";
 import { createClient } from "@/lib/supabase/server";
 import { formatDistanceToNow } from "date-fns";
+import { StatusTile, icons } from "./status-cards";
+import { feeStatuses } from "@/features/fees/data";
+import { loadEvents } from "@/features/events/data";
+import { eventWhen } from "@/features/events/event-card";
+import { clubHas } from "@/lib/club";
+import { periodOf, summarizeFees } from "@/lib/domain/fees";
 import { es } from "date-fns/locale";
 
 const FEELING = ["", "😫", "😓", "🙂", "😄", "🚀"];
@@ -57,6 +63,21 @@ export async function CoachHome({ ctx }: { ctx: ClubContext }) {
     .filter((b) => b.birth_date!.slice(5) === mmdd)
     .map((b) => members!.find((m) => m.user_id === b.user_id)?.profiles?.full_name)
     .filter(Boolean);
+
+  const hasFees = clubHas(club, "fees");
+  const hasMedical = clubHas(club, "medical");
+  const [fees, medical, events, { count: pendingPayments }] = await Promise.all([
+    hasFees ? feeStatuses(club.id, periodOf(today)) : Promise.resolve([]),
+    hasMedical ? supabase.rpc("club_medical_statuses", { p_club: club.id }).then((r) => r.data ?? []) : Promise.resolve([]),
+    loadEvents(club.id, { upcoming: true, limit: 1 }),
+    hasFees
+      ? supabase.from("fee_payments").select("id", { count: "exact", head: true }).eq("club_id", club.id).eq("status", "pending")
+      : Promise.resolve({ count: 0 }),
+  ]);
+  const feeSummary = summarizeFees(fees.map((f) => f.status));
+  const medExpired = medical.filter((m) => m.status === "expired").length;
+  const medExpiring = medical.filter((m) => m.status === "expiring").length;
+  const nextEvent = events[0];
 
   const plan = PLANS[effectivePlan({ planCode: club.plan_code as PlanCode, planStatus: club.plan_status, trialEndsAt: club.trial_ends_at, planOverride: club.plan_override })];
   const nearLimit = plan.maxRunners !== null && runners.length >= plan.maxRunners * 0.8;
@@ -105,6 +126,40 @@ export async function CoachHome({ ctx }: { ctx: ClubContext }) {
           </Link>
         </Button>
       </div>
+
+      {(hasFees || hasMedical || nextEvent) && (
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {hasFees && (
+            <StatusTile
+              href="/cuotas"
+              icon={icons.Wallet}
+              label="Cuotas del mes"
+              value={`${feeSummary.paid} de ${feeSummary.total}`}
+              sub={pendingPayments ? `${pendingPayments} para confirmar` : "al día"}
+              tone={pendingPayments ? "warning" : "neutral"}
+            />
+          )}
+          {hasMedical && (
+            <StatusTile
+              href="/aptos"
+              icon={icons.HeartPulse}
+              label="Aptos"
+              value={medExpired + medExpiring > 0 ? `${medExpired} vencidos` : "Todo en orden"}
+              sub={medExpiring ? `${medExpiring} por vencer` : undefined}
+              tone={medExpired ? "danger" : medExpiring ? "warning" : "success"}
+            />
+          )}
+          {nextEvent && (
+            <StatusTile
+              href={`/eventos/${nextEvent.id}`}
+              icon={icons.CalendarHeart}
+              label="Próximo evento"
+              value={nextEvent.name}
+              sub={`${eventWhen(nextEvent.starts_at, club.timezone)} · ${nextEvent.event_registrations.length} van`}
+            />
+          )}
+        </div>
+      )}
 
       {todaysBirthdays.length > 0 && (
         <Card className="mt-4 flex items-center gap-3">
