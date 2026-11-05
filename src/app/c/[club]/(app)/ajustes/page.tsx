@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarHeart, ChevronRight, Clock, HeartPulse, Lock, Sparkles, Wallet } from "lucide-react";
+import { CalendarHeart, ChevronRight, Clock, HeartPulse, Lock, ShoppingBag, Sparkles, Wallet } from "lucide-react";
 import { Avatar } from "@/components/brand/club-badge";
 import { Badge, Card, SectionTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/page-header";
@@ -18,6 +18,7 @@ const FEATURE_LABELS: Partial<Record<Feature, string>> = {
   medical: "Apto médico",
   birthdays: "Cumpleaños",
   store: "Tienda",
+  watch_sync: "Envío al reloj",
   priority_support: "Soporte prioritario",
 };
 
@@ -54,6 +55,7 @@ export default async function SettingsPage({ params }: PageProps<"/c/[club]/ajus
           { href: "/eventos", label: "Eventos", icon: CalendarHeart, on: true },
           { href: "/cuotas", label: "Cuotas", icon: Wallet, on: plan.features.includes("fees") },
           { href: "/aptos", label: "Aptos médicos", icon: HeartPulse, on: plan.features.includes("medical") },
+          { href: "/tienda", label: "Tienda", icon: ShoppingBag, on: plan.features.includes("store") },
         ].map(({ href, label, icon: Icon, on }) => (
           <Link key={href} href={href} className="block">
             <Card className="flex items-center gap-3 hover:bg-surface-2">
@@ -73,11 +75,12 @@ export default async function SettingsPage({ params }: PageProps<"/c/[club]/ajus
 
       <SectionTitle>Plan</SectionTitle>
       <Card className="space-y-3">
-        <div className="flex items-center justify-between">
+        <Link href="/ajustes/plan" className="flex items-center justify-between">
           <p className="font-display text-3xl font-extrabold uppercase">{plan.name}</p>
           {club.plan_status === "trialing" && club.trial_ends_at && <Badge tone="warning">Prueba hasta {new Date(club.trial_ends_at).toLocaleDateString("es-AR")}</Badge>}
           {club.plan_override && <Badge tone="accent">Piloto</Badge>}
-        </div>
+          <ChevronRight className="size-5 text-subtle" aria-hidden />
+        </Link>
         <div className="space-y-2 font-mono text-sm">
           <UsageBar label="Corredores" used={runners} limit={plan.maxRunners} />
           <UsageBar label="Coaches" used={staff.length} limit={plan.maxStaff} />
@@ -93,7 +96,9 @@ export default async function SettingsPage({ params }: PageProps<"/c/[club]/ajus
                 <Lock className="size-3.5" /> {locked.map((f) => FEATURE_LABELS[f]).join(" · ")}
               </p>
             )}
-            <p className="mt-2 text-xs text-subtle">Los pagos online llegan pronto. Mientras tanto, escribinos y lo activamos a mano.</p>
+            <Link href="/ajustes/plan" className="mt-2 inline-flex min-h-11 items-center font-semibold text-accent-text underline">
+              Ver planes{!club.trial_used ? " · probá 30 días gratis" : ""}
+            </Link>
           </div>
         )}
       </Card>

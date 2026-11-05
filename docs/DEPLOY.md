@@ -48,7 +48,22 @@ Supabase Cloud + Vercel, con el dominio `tropa.app` y el wildcard `*.tropa.app`.
 1. `pnpm vapid:generate` **una sola vez** y guardá las claves: si cambian, todas las suscripciones existentes dejan de funcionar.
 2. iOS solo recibe push con la app instalada en la pantalla de inicio (iOS 16.4+). La guía `/instalar` lo explica.
 
-## 4. Checklist antes de sumar un piloto
+## 4. Mercado Pago (suscripciones)
+
+1. En [Tus integraciones](https://www.mercadopago.com.ar/developers/panel/app) creá una aplicación de tipo *Suscripciones*.
+2. Copiá el **Access Token de producción** a `MP_ACCESS_TOKEN`.
+3. En *Webhooks* configurá la URL `https://tropa.app/api/billing/webhook/mercadopago` con los eventos **Planes y suscripciones** (`subscription_preapproval` y `subscription_authorized_payment`). Copiá la **clave secreta** a `MP_WEBHOOK_SECRET`.
+4. Los precios en pesos de cada plan están en `platform_plans.price_ars_cents` (editalos desde el SQL editor cuando cambie el tipo de cambio).
+5. Probá primero con usuarios de prueba de Mercado Pago y credenciales de prueba.
+
+## 5. Garmin
+
+1. Pedí acceso al [Garmin Connect Developer Program](https://developer.garmin.com/gc-developer-program/) (Training API). La aprobación la da Garmin.
+2. Registrá como redirect `https://tropa.app/api/watch/garmin/callback`.
+3. Cargá `GARMIN_CLIENT_ID` y `GARMIN_CLIENT_SECRET`. Si la documentación que te entreguen indica otros endpoints, sobrescribilos con `GARMIN_*_URL`.
+4. Sin estas variables, la opción "Conectar Garmin" no aparece.
+
+## 6. Checklist antes de sumar un piloto
 
 - [ ] `pnpm test` y `pnpm test:rls` en verde (CI).
 - [ ] Mail mágico llega y el link abre la app del club correcto.

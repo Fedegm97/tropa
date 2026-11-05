@@ -133,16 +133,50 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"clubs": {
+                },"billing_events": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"currency": string,"custom_domain": string | null,"deleted_at": string | null,"id": string,"invite_code": string,"logo_path": string | null,"name": string,"onboarding_step": number,"plan_code": string,"plan_override": boolean,"plan_status": Database["public"]['Enums']["plan_status"],"primary_color": string,"settings": NonNullable<Json>,"slug": string,"timezone": string,"trial_ends_at": string | null,"updated_at": string
+                    "error": string | null,"event_id": string,"id": number,"payload": NonNullable<Json>,"processed_at": string | null,"provider": string,"received_at": string,"type": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"currency"?: string,"custom_domain"?: string | null,"deleted_at"?: string | null,"id"?: string,"invite_code"?: string,"logo_path"?: string | null,"name": string,"onboarding_step"?: number,"plan_code"?: string,"plan_override"?: boolean,"plan_status"?: Database["public"]['Enums']["plan_status"],"primary_color"?: string,"settings"?: NonNullable<Json>,"slug": string,"timezone"?: string,"trial_ends_at"?: string | null,"updated_at"?: string
+                    "error"?: string | null,"event_id": string,"id"?: never,"payload": NonNullable<Json>,"processed_at"?: string | null,"provider": string,"received_at"?: string,"type"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"currency"?: string,"custom_domain"?: string | null,"deleted_at"?: string | null,"id"?: string,"invite_code"?: string,"logo_path"?: string | null,"name"?: string,"onboarding_step"?: number,"plan_code"?: string,"plan_override"?: boolean,"plan_status"?: Database["public"]['Enums']["plan_status"],"primary_color"?: string,"settings"?: NonNullable<Json>,"slug"?: string,"timezone"?: string,"trial_ends_at"?: string | null,"updated_at"?: string
+                    "error"?: string | null,"event_id"?: string,"id"?: never,"payload"?: NonNullable<Json>,"processed_at"?: string | null,"provider"?: string,"received_at"?: string,"type"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"club_counters": {
+                  Row: {
+                    "club_id": string,"key": string,"value": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "club_id": string,"key": string,"value"?: number
+                  }
+                  Update: {
+                    "club_id"?: string,"key"?: string,"value"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "club_counters_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"clubs": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"currency": string,"custom_domain": string | null,"deleted_at": string | null,"id": string,"invite_code": string,"logo_path": string | null,"name": string,"onboarding_step": number,"plan_code": string,"plan_override": boolean,"plan_status": Database["public"]['Enums']["plan_status"],"primary_color": string,"settings": NonNullable<Json>,"slug": string,"timezone": string,"trial_ends_at": string | null,"trial_used": boolean,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"currency"?: string,"custom_domain"?: string | null,"deleted_at"?: string | null,"id"?: string,"invite_code"?: string,"logo_path"?: string | null,"name": string,"onboarding_step"?: number,"plan_code"?: string,"plan_override"?: boolean,"plan_status"?: Database["public"]['Enums']["plan_status"],"primary_color"?: string,"settings"?: NonNullable<Json>,"slug": string,"timezone"?: string,"trial_ends_at"?: string | null,"trial_used"?: boolean,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"currency"?: string,"custom_domain"?: string | null,"deleted_at"?: string | null,"id"?: string,"invite_code"?: string,"logo_path"?: string | null,"name"?: string,"onboarding_step"?: number,"plan_code"?: string,"plan_override"?: boolean,"plan_status"?: Database["public"]['Enums']["plan_status"],"primary_color"?: string,"settings"?: NonNullable<Json>,"slug"?: string,"timezone"?: string,"trial_ends_at"?: string | null,"trial_used"?: boolean,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -365,19 +399,143 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"platform_plans": {
+                },"order_items": {
                   Row: {
-                    "code": string,"features": (string)[],"max_runners": number | null,"max_staff": number | null,"name": string,"price_usd_cents": number,"sort": number
+                    "club_id": string,"id": string,"order_id": string,"product_name": string,"quantity": number,"size": string | null,"unit_price_cents": number,"variant_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "code": string,"features"?: (string)[],"max_runners"?: number | null,"max_staff"?: number | null,"name": string,"price_usd_cents"?: number,"sort"?: number
+                    "club_id": string,"id"?: string,"order_id": string,"product_name": string,"quantity": number,"size"?: string | null,"unit_price_cents": number,"variant_id"?: string | null
                   }
                   Update: {
-                    "code"?: string,"features"?: (string)[],"max_runners"?: number | null,"max_staff"?: number | null,"name"?: string,"price_usd_cents"?: number,"sort"?: number
+                    "club_id"?: string,"id"?: string,"order_id"?: string,"product_name"?: string,"quantity"?: number,"size"?: string | null,"unit_price_cents"?: number,"variant_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "order_items_club_id_order_id_fkey"
+      columns: ["club_id","order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["club_id","id"]
+    },{
+      foreignKeyName: "order_items_club_id_variant_id_fkey"
+      columns: ["club_id","variant_id"]
+isOneToOne: false
+      referencedRelation: "product_variants"
+      referencedColumns: ["club_id","id"]
+    }
+                  ]
+                },"orders": {
+                  Row: {
+                    "club_id": string,"created_at": string,"id": string,"note": string | null,"number": number,"status": Database["public"]['Enums']["order_status"],"total_cents": number,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "club_id": string,"created_at"?: string,"id"?: string,"note"?: string | null,"number": number,"status"?: Database["public"]['Enums']["order_status"],"total_cents": number,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "club_id"?: string,"created_at"?: string,"id"?: string,"note"?: string | null,"number"?: number,"status"?: Database["public"]['Enums']["order_status"],"total_cents"?: number,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "orders_club_id_user_id_fkey"
+      columns: ["club_id","user_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["club_id","user_id"]
+    },{
+      foreignKeyName: "orders_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"platform_plans": {
+                  Row: {
+                    "code": string,"features": (string)[],"max_runners": number | null,"max_staff": number | null,"name": string,"price_ars_cents": number | null,"price_usd_cents": number,"sort": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"features"?: (string)[],"max_runners"?: number | null,"max_staff"?: number | null,"name": string,"price_ars_cents"?: number | null,"price_usd_cents"?: number,"sort"?: number
+                  }
+                  Update: {
+                    "code"?: string,"features"?: (string)[],"max_runners"?: number | null,"max_staff"?: number | null,"name"?: string,"price_ars_cents"?: number | null,"price_usd_cents"?: number,"sort"?: number
                   }
                   Relationships: [
                     
+                  ]
+                },"platform_subscriptions": {
+                  Row: {
+                    "club_id": string,"created_at": string,"created_by": string | null,"current_period_end": string | null,"external_id": string,"id": string,"payer_email": string | null,"plan_code": string,"provider": string,"raw": NonNullable<Json>,"status": Database["public"]['Enums']["subscription_status"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "club_id": string,"created_at"?: string,"created_by"?: string | null,"current_period_end"?: string | null,"external_id": string,"id"?: string,"payer_email"?: string | null,"plan_code": string,"provider": string,"raw"?: NonNullable<Json>,"status"?: Database["public"]['Enums']["subscription_status"],"updated_at"?: string
+                  }
+                  Update: {
+                    "club_id"?: string,"created_at"?: string,"created_by"?: string | null,"current_period_end"?: string | null,"external_id"?: string,"id"?: string,"payer_email"?: string | null,"plan_code"?: string,"provider"?: string,"raw"?: NonNullable<Json>,"status"?: Database["public"]['Enums']["subscription_status"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "platform_subscriptions_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "platform_subscriptions_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "platform_subscriptions_plan_code_fkey"
+      columns: ["plan_code"]
+isOneToOne: false
+      referencedRelation: "platform_plans"
+      referencedColumns: ["code"]
+    }
+                  ]
+                },"product_variants": {
+                  Row: {
+                    "club_id": string,"id": string,"product_id": string,"size": string | null,"sort": number,"stock": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "club_id": string,"id"?: string,"product_id": string,"size"?: string | null,"sort"?: number,"stock"?: number
+                  }
+                  Update: {
+                    "club_id"?: string,"id"?: string,"product_id"?: string,"size"?: string | null,"sort"?: number,"stock"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_variants_club_id_product_id_fkey"
+      columns: ["club_id","product_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["club_id","id"]
+    }
+                  ]
+                },"products": {
+                  Row: {
+                    "active": boolean,"club_id": string,"created_at": string,"description": string | null,"id": string,"name": string,"photo_path": string | null,"price_cents": number,"sort": number,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"club_id": string,"created_at"?: string,"description"?: string | null,"id"?: string,"name": string,"photo_path"?: string | null,"price_cents": number,"sort"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "active"?: boolean,"club_id"?: string,"created_at"?: string,"description"?: string | null,"id"?: string,"name"?: string,"photo_path"?: string | null,"price_cents"?: number,"sort"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "products_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"profile_private": {
                   Row: {
@@ -645,6 +803,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"watch_connections": {
+                  Row: {
+                    "access_token": string | null,"connected_at": string,"expires_at": string | null,"external_user_id": string | null,"provider": string,"refresh_token": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "access_token"?: string | null,"connected_at"?: string,"expires_at"?: string | null,"external_user_id"?: string | null,"provider": string,"refresh_token"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "access_token"?: string | null,"connected_at"?: string,"expires_at"?: string | null,"external_user_id"?: string | null,"provider"?: string,"refresh_token"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "watch_connections_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"watch_syncs": {
+                  Row: {
+                    "attempts": number,"club_id": string,"created_at": string,"error": string | null,"external_workout_id": string | null,"id": string,"provider": string,"session_id": string,"status": Database["public"]['Enums']["watch_sync_status"],"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attempts"?: number,"club_id": string,"created_at"?: string,"error"?: string | null,"external_workout_id"?: string | null,"id"?: string,"provider": string,"session_id": string,"status"?: Database["public"]['Enums']["watch_sync_status"],"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "attempts"?: number,"club_id"?: string,"created_at"?: string,"error"?: string | null,"external_workout_id"?: string | null,"id"?: string,"provider"?: string,"session_id"?: string,"status"?: Database["public"]['Enums']["watch_sync_status"],"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "watch_syncs_club_id_session_id_fkey"
+      columns: ["club_id","session_id"]
+isOneToOne: false
+      referencedRelation: "training_sessions"
+      referencedColumns: ["club_id","id"]
+    },{
+      foreignKeyName: "watch_syncs_club_id_user_id_fkey"
+      columns: ["club_id","user_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["club_id","user_id"]
+    },{
+      foreignKeyName: "watch_syncs_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -656,7 +866,7 @@ isOneToOne: false
                            },
 "admin_clubs_overview":
 { Args: Record<PropertyKey, never>; Returns: {
-              "created_at": string,"effective_plan": string,"id": string,"name": string,"plan_code": string,"plan_override": boolean,"plan_status": Database["public"]['Enums']["plan_status"],"runners": number,"sessions_30d": number,"slug": string,"staff": number,"trial_ends_at": string
+              "created_at": string,"effective_plan": string,"id": string,"name": string,"plan_code": string,"plan_override": boolean,"plan_status": Database["public"]['Enums']["plan_status"],"runners": number,"sessions_30d": number,"slug": string,"staff": number,"subscription_provider": string,"subscription_status": Database["public"]['Enums']["subscription_status"],"trial_ends_at": string
             }[]
                            },
 "admin_set_club_plan":
@@ -666,6 +876,9 @@ isOneToOne: false
 { Args: { "p_ids": (string)[] }; Returns: {
               "announcement_id": string,"my_reactions": (string)[],"reactions": Json,"views": number
             }[]
+                           },
+"apply_subscription":
+{ Args: { "p_club": string,"p_external_id": string,"p_payer_email"?: string,"p_period_end"?: string,"p_plan": string,"p_provider": string,"p_raw"?: Json,"p_status": Database["public"]['Enums']["subscription_status"] }; Returns: undefined
                            },
 "can_view_announcement":
 { Args: { "p_announcement": string }; Returns: boolean
@@ -678,6 +891,26 @@ isOneToOne: false
               "body": string,"club_color": string,"club_id": string,"club_name": string,"club_slug": string,"kind": string,"notification_id": string,"title": string,"url": string,"user_id": string
             }[]
                            },
+"claim_watch_syncs":
+{ Args: { "p_limit"?: number }; Returns: {
+              "attempts": number,
+"club_id": string,
+"created_at": string,
+"error": string | null,
+"external_workout_id": string | null,
+"id": string,
+"provider": string,
+"session_id": string,
+"status": Database["public"]['Enums']["watch_sync_status"],
+"updated_at": string,
+"user_id": string
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "watch_syncs"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "club_can_add":
 { Args: { "p_club": string,"p_role": Database["public"]['Enums']["member_role"] }; Returns: boolean
                            },
@@ -736,6 +969,7 @@ isOneToOne: false
 "slug": string,
 "timezone": string,
 "trial_ends_at": string | null,
+"trial_used": boolean,
 "updated_at": string
             }
                           SetofOptions: {
@@ -806,8 +1040,16 @@ isOneToOne: false
               "completed": number,"day": string,"planned": number
             }[]
                            },
+"next_counter":
+{ Args: { "p_club": string,"p_key": string }; Returns: number
+                           },
 "notify_members":
 { Args: { "p_audience": Database["public"]['Enums']["audience_kind"],"p_body": string,"p_club": string,"p_data"?: Json,"p_exclude": string,"p_kind": string,"p_shift": string,"p_targets": (string)[],"p_title": string,"p_url": string }; Returns: number
+                           },
+"place_order":
+{ Args: { "p_club": string,"p_items": Json,"p_note"?: string }; Returns: {
+              "order_id": string,"order_number": number
+            }[]
                            },
 "publish_session":
 { Args: { "p_session": string }; Returns: number
@@ -815,11 +1057,20 @@ isOneToOne: false
 "regenerate_invite_code":
 { Args: { "p_club": string }; Returns: string
                            },
+"request_watch_sync":
+{ Args: { "p_provider": string,"p_session": string }; Returns: string
+                           },
 "review_fee_payment":
 { Args: { "p_approve": boolean,"p_payment": string,"p_reason"?: string }; Returns: undefined
                            },
 "run_daily_reminders":
 { Args: { "p_ignore_hour"?: boolean,"p_now"?: string }; Returns: Json
+                           },
+"run_trial_reminders":
+{ Args: { "p_now"?: string }; Returns: number
+                           },
+"set_order_status":
+{ Args: { "p_order": string,"p_status": Database["public"]['Enums']["order_status"] }; Returns: undefined
                            },
 "shares_club":
 { Args: { "p_user": string }; Returns: boolean
@@ -829,12 +1080,15 @@ isOneToOne: false
               "club_name": string,"club_slug": string,"email": string,"expired": boolean,"primary_color": string
             }[]
                            },
+"start_trial":
+{ Args: { "p_club": string,"p_plan": string }; Returns: string
+                           },
 "upsert_push_subscription":
 { Args: { "p_auth": string,"p_club": string,"p_endpoint": string,"p_p256dh": string,"p_user_agent"?: string }; Returns: undefined
                            }
           }
           Enums: {
-            "audience_kind": "club"|"shift"|"runners","event_kind": "road"|"trail"|"track"|"social"|"trip","member_role": "owner"|"coach"|"runner","member_status": "active"|"inactive","pace_kind": "5k"|"threshold","payment_method": "transfer"|"cash"|"mercadopago"|"other","payment_status": "pending"|"confirmed"|"rejected","plan_status": "trialing"|"active"|"past_due"|"canceled","push_status": "pending"|"processing"|"sent"|"failed"|"skipped","runner_level": "beginner"|"intermediate"|"advanced","session_type": "easy_run"|"intervals"|"long_run"|"fartlek"|"hills"|"strength"|"rest"
+            "audience_kind": "club"|"shift"|"runners","event_kind": "road"|"trail"|"track"|"social"|"trip","member_role": "owner"|"coach"|"runner","member_status": "active"|"inactive","order_status": "pending_payment"|"paid"|"delivered"|"canceled","pace_kind": "5k"|"threshold","payment_method": "transfer"|"cash"|"mercadopago"|"other","payment_status": "pending"|"confirmed"|"rejected","plan_status": "trialing"|"active"|"past_due"|"canceled","push_status": "pending"|"processing"|"sent"|"failed"|"skipped","runner_level": "beginner"|"intermediate"|"advanced","session_type": "easy_run"|"intervals"|"long_run"|"fartlek"|"hills"|"strength"|"rest","subscription_status": "pending"|"authorized"|"paused"|"cancelled","watch_sync_status": "queued"|"sending"|"on_watch"|"failed"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -954,7 +1208,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "audience_kind": ["club", "shift", "runners"],"event_kind": ["road", "trail", "track", "social", "trip"],"member_role": ["owner", "coach", "runner"],"member_status": ["active", "inactive"],"pace_kind": ["5k", "threshold"],"payment_method": ["transfer", "cash", "mercadopago", "other"],"payment_status": ["pending", "confirmed", "rejected"],"plan_status": ["trialing", "active", "past_due", "canceled"],"push_status": ["pending", "processing", "sent", "failed", "skipped"],"runner_level": ["beginner", "intermediate", "advanced"],"session_type": ["easy_run", "intervals", "long_run", "fartlek", "hills", "strength", "rest"]
+            "audience_kind": ["club", "shift", "runners"],"event_kind": ["road", "trail", "track", "social", "trip"],"member_role": ["owner", "coach", "runner"],"member_status": ["active", "inactive"],"order_status": ["pending_payment", "paid", "delivered", "canceled"],"pace_kind": ["5k", "threshold"],"payment_method": ["transfer", "cash", "mercadopago", "other"],"payment_status": ["pending", "confirmed", "rejected"],"plan_status": ["trialing", "active", "past_due", "canceled"],"push_status": ["pending", "processing", "sent", "failed", "skipped"],"runner_level": ["beginner", "intermediate", "advanced"],"session_type": ["easy_run", "intervals", "long_run", "fartlek", "hills", "strength", "rest"],"subscription_status": ["pending", "authorized", "paused", "cancelled"],"watch_sync_status": ["queued", "sending", "on_watch", "failed"]
           }
         }
 } as const

@@ -80,6 +80,31 @@ Las funciones por plan se aplican también en la base: `fee_payments`, `fee_rule
 
 Cada aviso se registra en `reminder_log` (clave única), así correrlo dos veces no duplica nada. Las notificaciones las envía el worker de push en el siguiente minuto.
 
+## Fase 3: tienda, suscripciones y reloj
+
+### Tienda
+`products` → `product_variants` (talle + stock) → `orders` (numeradas por club con `club_counters`) → `order_items` (copian nombre, talle y precio). Los pedidos se crean **solo** por la RPC `place_order`, que toma precios y stock de la base, bloquea las variantes (`FOR UPDATE`) y avisa al staff. `set_order_status` maneja los estados; cancelar devuelve el stock.
+
+### Suscripciones
+```
+Owner → startSubscription() → BillingProvider.createCheckout() → Mercado Pago (preapproval)
+Mercado Pago → POST /api/billing/webhook/mercadopago
+   verifica x-signature → GET /preapproval/{id} (estado real) → billing_events (idempotencia)
+   → apply_subscription() → clubs.plan_code / plan_status
+```
+- `apply_subscription` es la única puerta para cambiar el plan por cobros (solo `service_role`); un club con plan piloto no se toca.
+- La prueba gratis (`start_trial`) no requiere tarjeta y se usa una vez por club; al vencer, `club_effective_plan()` devuelve Free sin necesidad de jobs.
+- Stripe: implementar `BillingProvider` y registrarlo en `src/lib/billing/index.ts`.
+
+### Envío al reloj
+```
+Corredor → request_watch_sync() → watch_syncs (queued)
+  after() / pg_cron → /api/jobs/watch → claim_watch_syncs() (SKIP LOCKED)
+  → toGarminWorkout(bloques, ritmo del corredor) → Garmin Training API (crear + agendar) → on_watch / failed
+```
+- Los tokens viven en `watch_connections` y **no son legibles por clientes** (permisos por columna); los usa solo el worker con `service_role`.
+- Los ritmos se envían como rangos de velocidad (m/s); un % único lleva ±3 % de margen.
+
 ## Ritmos (`src/lib/domain/pace.ts`)
 
 - El ancla es el **ritmo de umbral**. Si el corredor cargó su 5K, se estima con Riegel (`T2 = T1 · (D2/D1)^1.06`) como el ritmo sostenible 60 minutos.

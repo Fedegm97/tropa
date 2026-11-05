@@ -8,15 +8,18 @@ import { PushToggle } from "@/components/pwa/push-toggle";
 import { ProfileForm } from "@/features/members/profile-form";
 import { loadProfileForm } from "@/features/members/profile-data";
 import { LEVELS } from "@/features/members/schemas";
-import { requireClub } from "@/lib/club";
+import { clubHas, currentOrigin, requireClub } from "@/lib/club";
+import { WatchConnections } from "@/features/watch/connections";
+import { availableWatchProviders } from "@/lib/watch/providers";
+import { rootOrigin } from "@/lib/hosts";
 import { ROOT_DOMAIN } from "@/lib/env";
 import { clubOrigin } from "@/lib/hosts";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Perfil" };
 
-export default async function ProfilePage({ params }: PageProps<"/c/[club]/perfil">) {
-  const { club: slug } = await params;
+export default async function ProfilePage({ params, searchParams }: PageProps<"/c/[club]/perfil">) {
+  const [{ club: slug }, sp] = await Promise.all([params, searchParams]);
   const ctx = await requireClub(slug, "/perfil");
   const { initial, avatarPath } = await loadProfileForm(ctx);
   const supabase = await createClient();
@@ -49,6 +52,24 @@ export default async function ProfilePage({ params }: PageProps<"/c/[club]/perfi
           </Link>
         </Button>
       </Card>
+
+      {clubHas(ctx.club, "watch_sync") && (
+        <>
+          <SectionTitle id="reloj" className="scroll-mt-20">
+            Reloj
+          </SectionTitle>
+          {sp.reloj === "ok" && <p className="mb-2 rounded-2xl bg-success/15 p-3 text-sm text-success">¡Reloj conectado! Ya podés enviar sesiones desde el plan.</p>}
+          {sp.reloj === "error" && <p className="mb-2 rounded-2xl bg-danger/15 p-3 text-sm text-danger">No pudimos conectar el reloj. Probá de nuevo.</p>}
+          <Card>
+            <WatchConnections
+              providers={availableWatchProviders(rootOrigin(ROOT_DOMAIN)).map((p) => ({ name: p.name, label: p.label }))}
+              connected={(await supabase.from("watch_connections").select("provider, connected_at").eq("user_id", ctx.userId)).data ?? []}
+              rootOrigin={rootOrigin(ROOT_DOMAIN)}
+              back={`${await currentOrigin()}/perfil`}
+            />
+          </Card>
+        </>
+      )}
 
       {otherClubs && otherClubs.length > 0 && (
         <>

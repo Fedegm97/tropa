@@ -10,7 +10,11 @@ import { CompleteForm } from "@/features/training/complete-form";
 import { SessionStaffActions } from "@/features/training/staff-actions";
 import { SESSION_TYPES, parseBlocks, type SessionType } from "@/features/training/blocks";
 import { shortDate } from "@/lib/domain/dates";
-import { requireClub } from "@/lib/club";
+import { clubHas, requireClub } from "@/lib/club";
+import { WatchSyncButton } from "@/features/watch/sync-button";
+import { ROOT_DOMAIN } from "@/lib/env";
+import { rootOrigin } from "@/lib/hosts";
+import { availableWatchProviders } from "@/lib/watch/providers";
 import { createClient } from "@/lib/supabase/server";
 
 const FEELING = ["", "😫", "😓", "🙂", "😄", "🚀"];
@@ -57,6 +61,18 @@ export default async function SessionPage({ params }: PageProps<"/c/[club]/plan/
   if (!isStaff) {
     const reference = membership.ref_pace_s_per_km ? { secPerKm: membership.ref_pace_s_per_km, kind: membership.ref_pace_kind } : null;
     const { data: done } = await supabase.from("session_completions").select("feeling, comment").eq("session_id", id).eq("user_id", userId).maybeSingle();
+    const canWatch = clubHas(club, "watch_sync") && blocks.length > 0;
+    let watch: { provider: string | null; label: string; status: "queued" | "sending" | "on_watch" | "failed" | null; error: string | null } | null = null;
+    if (canWatch) {
+      const providers = availableWatchProviders(rootOrigin(ROOT_DOMAIN));
+      const [{ data: conns }, { data: syncs }] = await Promise.all([
+        supabase.from("watch_connections").select("provider").eq("user_id", userId),
+        supabase.from("watch_syncs").select("provider, status, error").eq("session_id", id).eq("user_id", userId),
+      ]);
+      const p = providers.find((pr) => conns?.some((c) => c.provider === pr.name)) ?? null;
+      const sync = syncs?.find((x) => x.provider === p?.name);
+      watch = { provider: p?.name ?? null, label: p?.label ?? "reloj", status: sync?.status ?? null, error: sync?.error ?? null };
+    }
     return (
       <div className="space-y-3">
         {header}
@@ -66,6 +82,7 @@ export default async function SessionPage({ params }: PageProps<"/c/[club]/plan/
             <ReferenceNote reference={reference} />
           </>
         )}
+        {watch && <WatchSyncButton sessionId={id} provider={watch.provider} providerLabel={watch.label} status={watch.status} error={watch.error} />}
         {s.type !== "rest" && <CompleteForm sessionId={id} done={done} />}
       </div>
     );

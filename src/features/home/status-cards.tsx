@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarHeart, ChevronRight, HeartPulse, Wallet } from "lucide-react";
+import { CalendarHeart, ChevronRight, HeartPulse, ShoppingBag, Wallet } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -34,4 +34,4 @@ export function StatusTile({
   );
 }
 
-export const icons = { Wallet, HeartPulse, CalendarHeart };
+export const icons = { Wallet, HeartPulse, CalendarHeart, ShoppingBag };

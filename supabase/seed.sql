@@ -6,7 +6,7 @@
 --   · Contraseña de todos los usuarios: tropa1234
 --
 -- Se ejecuta solo con `supabase db reset`. NO usar en producción.
--- (Los productos de la tienda se suman en la fase 3, junto con sus tablas.)
+
 -- =============================================================================
 
 do $seed$
@@ -297,3 +297,61 @@ begin
   update public.notifications set push_status = 'skipped', read_at = now() where push_status = 'pending';
 end;
 $seed2$;
+
+-- =============================================================================
+-- Fase 3: tienda con stock y pedidos en distintos estados, reloj de prueba
+-- =============================================================================
+do $seed3$
+declare
+  v_club uuid := '11111111-1111-1111-1111-111111111111';
+  v_p uuid;
+  v_remera_m uuid;
+  v_buzo_l uuid;
+  v_gorra uuid;
+  v_order uuid;
+  i int;
+begin
+  insert into public.products (club_id, name, description, price_cents, sort)
+  values (v_club, 'Remera técnica Río Norte', 'Tela dry-fit liviana, con el logo del club adelante y "RÍO NORTE" en la espalda.', 1800000, 1)
+  returning id into v_p;
+  insert into public.product_variants (club_id, product_id, size, stock, sort) values
+    (v_club, v_p, 'S', 4, 1), (v_club, v_p, 'M', 6, 2), (v_club, v_p, 'L', 3, 3), (v_club, v_p, 'XL', 0, 4);
+  select id into v_remera_m from public.product_variants where product_id = v_p and size = 'M';
+
+  insert into public.products (club_id, name, description, price_cents, sort)
+  values (v_club, 'Buzo frisa del club', 'Ideal para la previa de las carreras de invierno.', 3500000, 2)
+  returning id into v_p;
+  insert into public.product_variants (club_id, product_id, size, stock, sort) values
+    (v_club, v_p, 'M', 2, 1), (v_club, v_p, 'L', 5, 2), (v_club, v_p, 'XL', 1, 3);
+  select id into v_buzo_l from public.product_variants where product_id = v_p and size = 'L';
+
+  insert into public.products (club_id, name, price_cents, sort) values (v_club, 'Gorra running', 1200000, 3) returning id into v_p;
+  insert into public.product_variants (club_id, product_id, size, stock) values (v_club, v_p, null, 12) returning id into v_gorra;
+
+  insert into public.products (club_id, name, price_cents, sort, active) values (v_club, 'Medias edición 10K (próximamente)', 600000, 4, false) returning id into v_p;
+  insert into public.product_variants (club_id, product_id, size, stock) values (v_club, v_p, null, 0);
+
+  -- Pedidos: 2 pendientes de pago, 2 pagados, 3 entregados
+  for i in 1..7 loop
+    insert into public.orders (club_id, number, user_id, status, total_cents, created_at)
+    values (v_club, i, ('00000000-0000-0000-0000-000000000b' || lpad((i * 2)::text, 2, '0'))::uuid,
+            (case when i <= 3 then 'delivered' when i <= 5 then 'paid' else 'pending_payment' end)::public.order_status,
+            0, now() - ((8 - i) || ' days')::interval)
+    returning id into v_order;
+    insert into public.order_items (club_id, order_id, variant_id, product_name, size, quantity, unit_price_cents)
+    values (v_club, v_order,
+            case i % 3 when 0 then v_gorra when 1 then v_remera_m else v_buzo_l end,
+            case i % 3 when 0 then 'Gorra running' when 1 then 'Remera técnica Río Norte' else 'Buzo frisa del club' end,
+            case i % 3 when 0 then null when 1 then 'M' else 'L' end,
+            1 + i % 2,
+            case i % 3 when 0 then 1200000 when 1 then 1800000 else 3500000 end);
+    update public.orders o set total_cents = (select sum(quantity * unit_price_cents) from public.order_items where order_id = o.id) where o.id = v_order;
+  end loop;
+  insert into public.club_counters (club_id, key, value) values (v_club, 'order', 91)
+  on conflict (club_id, key) do update set value = 91; -- el próximo pedido es el #92
+
+  -- Reloj de prueba conectado para corredor1 (solo desarrollo)
+  insert into public.watch_connections (user_id, provider, external_user_id, access_token)
+  values ('00000000-0000-0000-0000-000000000b01', 'fake', 'fake-user', 'fake-access');
+end;
+$seed3$;

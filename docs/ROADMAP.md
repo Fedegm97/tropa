@@ -26,17 +26,25 @@
 - Funciones según el plan: cuotas, apto y cumpleaños desde el plan Coach, con mensaje + upsell; los datos ya cargados siempre se siguen viendo
 - Seed: cuotas con estados mezclados (incluye pago parcial, rechazado y becado), aptos en todos los estados y 4 eventos con inscriptos
 
-## Fase 3
+## Fase 3 · Tienda, suscripciones y reloj ✅
 
-- Tienda (productos, talles, stock, pedidos con numeración por club)
-- Suscripciones con Mercado Pago (capa `BillingProvider` para sumar Stripe), prueba de 30 días sin tarjeta
-- Activación automática de funciones al suscribirse (hoy el gating por plan ya funciona; el cambio de plan es manual desde /admin)
-- Tienda bajo la feature `store` (plan Team)
-- Garmin Connect Training API ("Enviando… → En el reloj")
+- Tienda: productos con foto, precio, talles y stock; el corredor pide (precio y stock salen de la base, con lock), numeración por club ("Nuevo pedido #92" al staff), estados Pendiente de pago → Pagado → Entregado, cancelar devuelve el stock
+- Suscripciones de la plataforma con Mercado Pago (preapproval mensual en pesos) detrás de una interfaz `BillingProvider` (sumar Stripe = implementar la interfaz); webhooks con firma `x-signature` verificada, idempotentes y que consultan el estado real; cambio de plan cancela la suscripción anterior; proveedor simulado para desarrollo
+- Prueba gratis de 30 días sin tarjeta (una vez por club), aviso al owner 3 días antes, vuelta a Free automática al vencer; los pilotos quedan fijos
+- Funciones por plan en UI y en la base (tienda desde Team; envío al reloj desde Coach)
+- Garmin: conexión OAuth 2.0 + PKCE, mapeo de bloques a workout con ritmos personalizados (rangos de velocidad), envío en segundo plano con estados "Enviando… → En el reloj", reintentos y refresh de tokens; reloj simulado para desarrollo
+- Superadmin: estado de la suscripción por club
+
+## Para salir a producción con pagos y Garmin
+
+- Mercado Pago: credenciales de producción + clave de webhooks (ver `docs/DEPLOY.md`)
+- Garmin: aprobación en el Garmin Connect Developer Program (Training API). Al aprobarte, confirmar los endpoints en `src/lib/watch/providers.ts` (se pueden sobrescribir por variables de entorno) y probar con una cuenta real
+- Stripe: implementar `BillingProvider` en `src/lib/billing/stripe.ts` y registrarlo en `src/lib/billing/index.ts`
 
 ## Pendientes transversales
 
 - Sentry y analytics de uso por club
 - Splash screens de iOS (`apple-touch-startup-image`)
 - Modo claro (hoy solo dark)
-- Tests E2E con Playwright en CI
+- Tests E2E con Playwright en CI (hoy se corren a mano)
+- Carrito con varios productos por pedido (la base ya lo soporta; la UI pide de a un producto)

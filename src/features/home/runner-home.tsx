@@ -117,8 +117,9 @@ export async function RunnerHome({ ctx }: { ctx: ClubContext }) {
         <EmptyState icon={CalendarCheck} title="Hoy no hay plan" description="Aprovechá para descansar o mirá lo que viene en la semana." action={<Button asChild variant="secondary"><Link href="/plan">Ver la semana</Link></Button>} />
       )}
 
-      {(myFee || hasMedical) && (
+      {(myFee || hasMedical || clubHas(club, "store")) && (
         <div className="mt-4 grid grid-cols-2 gap-3">
+          {clubHas(club, "store") && <StatusTile href="/tienda" icon={icons.ShoppingBag} label="Tienda" value="Ropa del club" />}
           {myFee && (
             <StatusTile
               href="/cuota"

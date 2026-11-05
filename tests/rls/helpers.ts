@@ -101,6 +101,8 @@ export type ClubFixture = {
   announcementShift: string;
   paymentId: string;
   eventId: string;
+  variantId: string;
+  orderId: string;
 };
 
 /** Crea un club completo con datos en todas las tablas (como superusuario). */
@@ -212,6 +214,25 @@ export async function createClubFixture(db: Db, label: string): Promise<ClubFixt
   );
   await db.query(`insert into public.event_registrations (club_id, event_id, user_id, distance) values ($1, $2, $3, '10K')`, [clubId, event.id, runner1.id]);
 
+  // Fase 3
+  const product = await one(`insert into public.products (club_id, name, price_cents) values ($1, 'Remera', 1500000) returning id`, [clubId]);
+  const variant = await one(`insert into public.product_variants (club_id, product_id, size, stock) values ($1, $2, 'M', 5) returning id`, [clubId, product.id]);
+  const order = await one(
+    `insert into public.orders (club_id, number, user_id, total_cents) values ($1, 1, $2, 1500000) returning id`,
+    [clubId, runner1.id],
+  );
+  await db.query(
+    `insert into public.order_items (club_id, order_id, variant_id, product_name, size, quantity, unit_price_cents) values ($1, $2, $3, 'Remera', 'M', 1, 1500000)`,
+    [clubId, order.id, variant.id],
+  );
+  await db.query(`insert into public.club_counters (club_id, key, value) values ($1, 'order', 1)`, [clubId]);
+  await db.query(`insert into public.platform_subscriptions (club_id, provider, external_id, plan_code) values ($1, 'fake', $2, 'team')`, [
+    clubId,
+    `sub-${clubId}`,
+  ]);
+  await db.query(`insert into public.watch_connections (user_id, provider, access_token) values ($1, 'fake', 'secret-token') on conflict do nothing`, [runner1.id]);
+  await db.query(`insert into public.watch_syncs (club_id, session_id, user_id, provider) values ($1, $2, $3, 'fake')`, [clubId, sClub.id, runner1.id]);
+
   await db.query(
     `insert into storage.objects (bucket_id, name, owner_id) values
        ('club-files', $1, $3), ('club-files', $2, $4), ('branding', $5, $3)`,
@@ -240,6 +261,8 @@ export async function createClubFixture(db: Db, label: string): Promise<ClubFixt
     announcementShift: annShift.id,
     paymentId: payment.id,
     eventId: event.id,
+    variantId: variant.id,
+    orderId: order.id,
   };
 }
 

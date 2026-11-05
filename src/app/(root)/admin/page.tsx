@@ -38,6 +38,11 @@ export default async function AdminPage() {
               <Badge tone={c.effective_plan === "free" ? "neutral" : "accent"}>{c.effective_plan}</Badge>
               {c.plan_override && <Badge tone="warning">piloto</Badge>}
               <Badge tone={c.plan_status === "active" || c.plan_status === "trialing" ? "success" : "danger"}>{c.plan_status}</Badge>
+              {c.subscription_status && (
+                <Badge tone={c.subscription_status === "authorized" ? "success" : c.subscription_status === "pending" ? "warning" : "neutral"}>
+                  {c.subscription_provider} · {c.subscription_status}
+                </Badge>
+              )}
             </div>
             <p className="font-mono text-xs text-muted">
               {c.runners} corredores · {c.staff} staff · {c.sessions_30d} sesiones completadas (30 días) · alta{" "}

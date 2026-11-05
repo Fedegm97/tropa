@@ -2,11 +2,11 @@
 
 Plataforma SaaS de marca blanca para running teams. Cada club tiene su propia app (nombre, color, logo y subdominio) que sus corredores instalan como PWA desde el navegador, sin pasar por las stores.
 
-- **Corredor:** ve su plan del día con ritmos calculados para él, marca sesiones como hechas, informa el pago de la cuota, sube el apto médico, se anota en eventos y recibe avisos con push.
-- **Coach:** arma planes por bloques, segmenta por turno o corredor, ve quién completó, publica avisos, confirma cuotas, controla aptos y organiza eventos.
-- **Owner:** configura la marca, invita coaches y corredores, administra turnos y el plan.
+- **Corredor:** ve su plan del día con ritmos calculados para él, marca sesiones como hechas, informa el pago de la cuota, sube el apto médico, se anota en eventos, compra en la tienda, manda la sesión a su reloj y recibe avisos con push.
+- **Coach:** arma planes por bloques, segmenta por turno o corredor, ve quién completó, publica avisos, confirma cuotas, controla aptos, organiza eventos y gestiona los pedidos de la tienda.
+- **Owner:** configura la marca, invita coaches y corredores, administra turnos y suscribe el club a un plan (prueba de 30 días sin tarjeta).
 
-> Estado: **Fase 2 completa** (planes, avisos, turnos, cuotas, apto médico, eventos y recordatorios). Ver [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> Estado: **Fases 1, 2 y 3 completas** (planes, avisos, turnos, cuotas, apto médico, eventos, recordatorios, tienda, suscripciones con Mercado Pago y envío al reloj Garmin). Ver [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Stack
 
@@ -72,6 +72,8 @@ Link de invitación del club de ejemplo: http://rionorte.lvh.me:3000/unirme/RION
 
 En el seed, `corredor13`–`15` tienen pagos para confirmar, `corredor16` uno rechazado, `corredor17`, `18` y `20` deben, `corredor19` pagó parcial y `corredor9` está becado. Los aptos: 1–10 vigentes, 11–13 por vencer, 14–15 vencidos y 16–20 sin cargar.
 
+Tienda: 4 productos (uno oculto) y 7 pedidos en distintos estados; el próximo es el #92. `corredor1` tiene conectado un **reloj de prueba**: abrí una sesión con bloques y tocá "Enviar al reloj". Para probar suscripciones, creá un club nuevo desde http://lvh.me:3000/crear y entrá a **Club → Plan**: en desarrollo el pago lo procesa un checkout simulado que dispara el mismo webhook firmado que Mercado Pago.
+
 ## Scripts
 
 | Script | Qué hace |
@@ -97,6 +99,12 @@ En el seed, `corredor13`–`15` tienen pagos para confirmar, `corredor16` uno re
 | `VAPID_PRIVATE_KEY` | **solo servidor** | Clave privada VAPID |
 | `VAPID_SUBJECT` | servidor | `mailto:` de contacto para los push services |
 | `CRON_SECRET` | servidor | Secreto compartido con pg_cron / Vercel Cron para `/api/jobs/*` |
+| `BILLING_PROVIDER` | servidor | `mercadopago` o `fake` (por defecto: `mercadopago` si hay token; si no, `fake` fuera de producción) |
+| `MP_ACCESS_TOKEN` | **solo servidor** | Access token de Mercado Pago |
+| `MP_WEBHOOK_SECRET` | **solo servidor** | Clave secreta de webhooks de Mercado Pago (valida `x-signature`) |
+| `FAKE_BILLING_SECRET` | servidor | Firma del proveedor simulado (por defecto `CRON_SECRET`) |
+| `GARMIN_CLIENT_ID` / `GARMIN_CLIENT_SECRET` | **solo servidor** | App del Garmin Connect Developer Program |
+| `ALLOW_FAKE_BILLING` / `ALLOW_FAKE_WATCH` | servidor | `1` habilita los simulados en producción (solo demos) |
 | `SUPABASE_DB_URL` | tests | Opcional; por defecto la base de `supabase start` |
 
 ## Deploy
@@ -116,12 +124,16 @@ src/
       manifest.webmanifest/   # manifest dinámico
       icon/[variant]/         # íconos PWA generados (192, 512, maskable, apple, favicon, badge)
     auth/                     # callback de mail mágico / Google, logout
-    api/jobs/push/            # vaciar cola de push (pg_cron / Vercel Cron)
+    api/jobs/push/ api/jobs/watch/   # colas de push y de envío al reloj (pg_cron)
+    api/billing/webhook/[provider]/  # webhooks de cobros (Mercado Pago)
+    api/watch/[provider]/            # conexión OAuth del reloj
   features/<módulo>/          # schemas (Zod), actions (Server Actions), componentes
   lib/
     domain/                   # lógica pura y testeada: pace, fees, medical, plans, dates, color, slug
     supabase/                 # clientes server / browser / admin + tipos generados
     push/dispatch.ts          # worker de Web Push
+    billing/                  # BillingProvider: Mercado Pago, simulado (Stripe: próximo)
+    watch/                    # Garmin: mapeo de workouts, OAuth, worker de envío
   components/                 # ui, shell, brand, pwa
 supabase/
   migrations/                 # esquema + RLS + RPCs + storage + cron

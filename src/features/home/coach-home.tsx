@@ -74,6 +74,10 @@ export async function CoachHome({ ctx }: { ctx: ClubContext }) {
       ? supabase.from("fee_payments").select("id", { count: "exact", head: true }).eq("club_id", club.id).eq("status", "pending")
       : Promise.resolve({ count: 0 }),
   ]);
+  const hasStore = clubHas(club, "store");
+  const { count: openOrders } = hasStore
+    ? await supabase.from("orders").select("id", { count: "exact", head: true }).eq("club_id", club.id).in("status", ["pending_payment", "paid"])
+    : { count: 0 };
   const feeSummary = summarizeFees(fees.map((f) => f.status));
   const medExpired = medical.filter((m) => m.status === "expired").length;
   const medExpiring = medical.filter((m) => m.status === "expiring").length;
@@ -127,8 +131,17 @@ export async function CoachHome({ ctx }: { ctx: ClubContext }) {
         </Button>
       </div>
 
-      {(hasFees || hasMedical || nextEvent) && (
+      {(hasFees || hasMedical || nextEvent || hasStore) && (
         <div className="mt-3 grid grid-cols-2 gap-3">
+          {hasStore && (
+            <StatusTile
+              href="/tienda/pedidos"
+              icon={icons.ShoppingBag}
+              label="Pedidos"
+              value={openOrders ? `${openOrders} abiertos` : "Al día"}
+              tone={openOrders ? "warning" : "neutral"}
+            />
+          )}
           {hasFees && (
             <StatusTile
               href="/cuotas"

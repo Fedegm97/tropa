@@ -14,7 +14,8 @@ export type Feature =
   | "medical"
   | "birthdays"
   | "store"
-  | "priority_support";
+  | "priority_support"
+  | "watch_sync";
 
 export type Plan = {
   code: PlanCode;
@@ -26,7 +27,7 @@ export type Plan = {
 };
 
 const BASE: Feature[] = ["training", "events", "announcements", "shifts"];
-const COACH: Feature[] = [...BASE, "fees", "medical", "birthdays"];
+const COACH: Feature[] = [...BASE, "fees", "medical", "birthdays", "watch_sync"];
 const TEAM: Feature[] = [...COACH, "store", "priority_support"];
 
 export const PLANS: Record<PlanCode, Plan> = {
